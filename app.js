@@ -18,8 +18,8 @@ const expireTime = 24 * 60 * 60 * 1000;
 const mongodb_host = process.env.HOST;
 const mongodb_user = process.env.USER;
 const mongodb_password = process.env.DATABASE_PASS;
-const mongodb_database = "sessions";
-const mongodb_user_database = "users";
+const mongodb_session_database = process.env.SESSION_DB;
+const mongodb_user_database = process.env.USER_DB;
 
 const node_session_secret = process.env.NODE_SECRET;
 
@@ -36,7 +36,7 @@ app.use(mongoSanitizer({
 }));
 
 var mongoStore = MongoStore.create({
-    mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/${mongodb_database}`,
+    mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/${mongodb_session_database}`,
     crypto: {
         secret: process.env.MONGO_SESSION_SECRET
     }
