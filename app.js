@@ -13,8 +13,8 @@ const expireTime = 24 * 60 * 60 * 1000;
 
 var users = [];
 
-const mongodb_host = "bcit-mroo.qmlx38s.mongodb.net"
-const mongodb_user = "malcoroo_db_user"
+const mongodb_host = process.env.HOST;
+const mongodb_user = process.env.USER;
 const mongodb_password = process.env.DATABASE_PASS;
 const mongodb_database = "sessions";
 
