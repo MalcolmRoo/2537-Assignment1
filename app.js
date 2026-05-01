@@ -25,7 +25,7 @@ app.use(express.urlencoded({extended: false}));
 var mongoStore = MongoStore.create({
     mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/${mongodb_database}`,
     crypto: {
-        secret: "secret"
+        secret: process.env.MONGO_SESSION_SECRET
     }
 })
 
@@ -50,7 +50,7 @@ app.get('/', (req, res) => {
     } else {
         html = `
         <div>
-            <h1>My Site</h1>
+            <h1>Hello, ${users[0].username}</h1>
             <a href="/members"><button>Members Area</button></a>
             <a href="/logout"><button>Log Out</button></a>
         </div>
@@ -64,7 +64,7 @@ app.get('/login', (req, res) => {
         <div>
             <h1>Login</h1>
             <form method="post" action="/loginSubmit">
-                <input type="text" name="username" id="username" placeholder="username"></input>
+                <input type="email" name="email" id="email" placeholder="email"></input>
                 <input type="password" name="password" id="password" placeholder="password"></input>
                 <button>Login</button>
             </form>
@@ -87,22 +87,27 @@ app.get('/signup', (req, res) => {
 });
 
 app.post('/loginSubmit', (req, res) => {
-    var username = req.body.username;
+    var email = req.body.email;
     var password = req.body.password;
+    var username = req.body.username;
 
     for(i = 0; i < users.length; i++){
-        if(users[i].username == username) {
+        if(users[i].email == email) {
             if(bcrypt.compareSync(password, users[i].password)) {
                 req.session.authenticated = true;
                 req.session.username = username;
-                req.
+                req.session.expireTime = expireTime;
+
                 res.redirect('/');
                 return;
             }
         }
     }
 
-    res.redirect("/login");
+    res.send(`
+        <p>Invalid email/password combintation.</p>
+        <a href="/login"><button>Try Again</button></a>
+        `);
 });
 
 app.post('/signupSubmit', (req, res) => {
@@ -110,17 +115,28 @@ app.post('/signupSubmit', (req, res) => {
     var email = req.body.email;
     var password = req.body.password;
 
-    var hashedPassword = bcrypt.hashSync(password, saltRounds);
+    var html = "";
+    if(!username){
+        html += `<p>Name is required</p>
+        <a href="/signup"><button>Try Again</button></a>`;   
+    } else if (!email) {
+         html += `<p>Email is required</p>
+        <a href="/signup"><button>Try Again</button></a>`;
+    } else if (!password){
+         html += `<p>Password is required</p>
+        <a href="/signup"><button>Try Again</button></a>`;
+    } else {
+       var hashedPassword = bcrypt.hashSync(password, saltRounds);
+        users.push({username: username, email: email, password: hashedPassword});
+        res.redirect("/");
+    }
 
-    users.push({username: username, email: email, password: hashedPassword});
-
-    res.send(`
-        <p>user: ${users[0].username} email: ${users[0].email} pass: ${users[0].password}</p>
-        `);
+    res.send(html);
 });
 
 app.get('/members', (req,res) => {
     var html = "";
+    let num = Math.floor(Math.random() * 3);
     if(!req.session.authenticated){
         html = `
             <p>You are not logged in</p>
@@ -128,24 +144,35 @@ app.get('/members', (req,res) => {
         `;
     } else {
         html = `
-        <p> Hello!!</p>
-        <img src="/fluffy.gif"/>
-        `
+        <p> Hello ${users[0].username}!!</p>`;
+        if(num === 0){
+            html += `<img src="/fluffy.gif"/>`;
+        } else if (num === 1){
+            html += `<img src="/socks.gif"/>`;
+        } else if (num === 2){
+            html += `<img src="/crunchy.gif"/>`;
+        }
+        
+        html += `</br><a href="/logout"><button>Logout</button></a>
+        `;
     }
     res.send(html);
 });
 
 app.get('/logout', (req, res) => {
     req.session.destroy();
-    res.send(`<p>You are logged out</p>`);
-    redirect("/");
+    res.send(`
+        <p>You are logged out</p>
+        <a href="/"><button>home</button></a>
+        `);
 });
 
 app.use(express.static(__dirname + "/public"));
 
 app.use((req, res) => {
     res.status(404);
-    res.send(`<h1>Page not Found - 404</h1>`);
+    res.send(`<h1>Page not Found - 404</h1>
+            <a href="/"><button>Home</button></a>`);
 })
 
 //Start Server
