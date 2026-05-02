@@ -13,7 +13,7 @@ const Joi = require('joi');
 const mongoSanitizer = require('mongo-sanitizer').default;
 
 const PORT = process.env.PORT || 3000;
-const expireTime = 24 * 60 * 60 * 1000;
+const expireTime = 60 * 60 * 1000;
 
 const mongodb_host = process.env.HOST;
 const mongodb_user = process.env.USER;
