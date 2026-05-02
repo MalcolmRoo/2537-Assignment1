@@ -179,6 +179,7 @@ app.post('/signupSubmit', async (req, res) => {
         req.session.cookie.maxAge = expireTime;
 
         res.redirect("/members");
+        return;
     }
 
     res.send(html);
